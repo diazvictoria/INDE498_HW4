@@ -14,7 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 # Question 1 
 Set an initial value for lambda = 1, beta1 = 0, and beta2 = 1. Implement the Shooting algorithm by your manual operation. Get updated values of beta1 and beta2. Do one iteration.
 
-This has been done by hand. 
+```{r, out.width = "700px"}
+knitr::include_graphics("Q1.jpg")
+```
 
 # Question 2 
 Use the essential R pipeline for LASSO on this data. Compare the result from R and the result by your manual calculation. 
@@ -34,6 +36,7 @@ X <- data.frame(x_1, x_2)
 data <- data.frame(Y,X)
 
 # create a training data (half the original data size)
+set.seed(1)
 train.ix <- sample(nrow(data),floor( nrow(data)) * 4 / 5 )
 data.train <- data[train.ix,]
 
@@ -59,7 +62,9 @@ print(fit$beta) # The fitted sparse regression parameters under
 ```
 
 We run LASSO again with defaulted values. We notice that we get 
-nonzero coefficients and plot the results. 
+nonzero coefficients and plot the results. Moreover, we notice that the second coefficient is the first coefficient to become nonzero. We conclude that the second predictor is more important than the first.
+
+Note: This makes sense with our computations from Problem 1 since $\beta_1$ increased from 0 to 0.46 while $\beta_2$ increased from 1 to 1.92.
 ```{r} 
 require(glmnet)
 fit = glmnet(trainX,trainY, family=c("gaussian")) 
@@ -76,7 +81,7 @@ cv.fit = cv.glmnet(trainX, trainY, nfolds = 4)
 plot(cv.fit) 
 ```
 
-We see that the cross-validation showed that the best choice for lambda is 0.3964124. This choice will give us a MSE of 0.1620063
+We see that the cross-validation showed that the best choice for lambda is 0.5010311. This choice will give us a MSE of 0.1620063
 ```{r}
 cv.fit$lambda.min
 coef(cv.fit, s = "lambda.min") 
