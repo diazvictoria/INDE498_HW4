@@ -19,20 +19,72 @@ This has been done by hand.
 # Question 2 
 Use the essential R pipeline for LASSO on this data. Compare the result from R and the result by your manual calculation. 
 
-```{r} 
+Load and prep the data.
+```{r}
 # load the data
-x_1 <- c(-0.15, -0.72, 1.36, 0.61, -1.11)
-x_2 <- c(-0.48, -0.54, -0.91, 1.59, 0.34) 
-Y <- data.frame(Y = c(0.46, -0.37, -0.27, 1.35, -0.11))
+x_1 <- c(-0.15, -0.72, 1.36, 0.61, -1.11) 
+x_2 <- c(-0.48, -0.54, 0.91, 1.59, 0.34) 
+Y <- c(0.46, -0.37, -0.27, 1.35, -0.11)
+lambda <- 1
 
-# create the X input matrix
+# create the matrix X
 X <- data.frame(x_1, x_2)
 
-# integrate all the data into a dataframe 
+# organize all our data together
 data <- data.frame(Y,X)
+
+# create a training data (half the original data size)
+train.ix <- sample(nrow(data),floor( nrow(data)) * 4 / 5 )
+data.train <- data[train.ix,]
+
+# create a testing data (half the original data size)
+data.test <- data[-train.ix,]
+
+# some lines of code for glmnet requirements
+trainX <- as.matrix(data.train[,-1]) 
+testX <- as.matrix(data.test[,-1])
+trainY <- as.matrix(data.train[,1])
+testY <- as.matrix(data.test[,1])
+```
+  
+When we conduct LASSO for lambda = 1, we notice that both of our 
+coefficients are equal to 0. This means that 
+lambda = 1 is too big for our coefficients to be nonzero. 
+```{r}
+# use glmnet package to conduct LASSO; note that we let lambda = 1
+require(glmnet)
+fit = glmnet(trainX,trainY, family=c("gaussian"), lambda = 1) 
+print(fit$beta) # The fitted sparse regression parameters under 
+#different lambda values
 ```
 
-THIS IS UNFINISHED.
+We run LASSO again with defaulted values. We notice that we get 
+nonzero coefficients and plot the results. 
+```{r} 
+require(glmnet)
+fit = glmnet(trainX,trainY, family=c("gaussian")) 
+print(fit$beta) # The fitted sparse regression parameters under different lambda values
+plot(fit,label = TRUE)
+```
+
+We use cross-validation, keeping in mind that we only have a 
+few data points, to decide 
+which lambda to use. 
+Note: $nfolds = 4$ and $grouped = FALSE$ is enforced. 
+```{r}
+cv.fit = cv.glmnet(trainX, trainY, nfolds = 4) 
+plot(cv.fit) 
+```
+
+We see that the cross-validation showed that the best choice for lambda is 0.3964124. This choice will give us a MSE of 0.1620063
+```{r}
+cv.fit$lambda.min
+coef(cv.fit, s = "lambda.min") 
+y_hat <- predict(cv.fit, newx = testX, s = "lambda.min") 
+cor(y_hat, data.test$Y) 
+mse <- mean((y_hat - data.test$Y)^2) 
+mse
+```
 
 # Question 3 
 (1) Write up the gaussian mixture model (GMM) that you want to estimate
@@ -40,15 +92,31 @@ THIS IS UNFINISHED.
 (3) Update the labels with your estimated parameters
 (4) Estimate the parameters again
 
+```{r, out.width = "700px"}
+knitr::include_graphics("Q3_1.png")
+```
+
+```{r, out.width = "700px"}
+knitr::include_graphics("Q3_2.png")
+```
 
 # Question 4 
 Use the essential R pipeline for clustering on this data. Compare the result from R and the result by your manual calculation. 
+
+```{r, out.width = "700px"}
+knitr::include_graphics("Q4.png")
+```
+
 
 # Question 5
 Consider the following data. Assume that two trees were built on it. Calculate the variable importance of each variable in RF. 
 (1) Calculate the gini index of each node of both trees
 (2) Estimate the importance scores of the three variables in these RF model
 
+```{r, out.width = "700px"}
+knitr::include_graphics("Q5_1.jpg")
+```
 
-
-
+```{r, out.width = "700px"}
+knitr::include_graphics("Q5_2.png")
+```
